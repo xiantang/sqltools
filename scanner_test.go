@@ -5,20 +5,6 @@ import (
 	"testing"
 )
 
-func TestNewScanner(t *testing.T) {
-	s := NewScanner(strings.NewReader("tt.s"))
-	read := s.read()
-	println(string(read))
-	read = s.read()
-	println(string(read))
-	read = s.read()
-	println(string(read))
-	s.unread()
-	s.unread()
-	s.unread()
-	read = s.read()
-	println(string(read))
-}
 
 // Ensure the scanner can scan tokens correctly.
 func TestScanner_Scan(t *testing.T) {
@@ -45,6 +31,9 @@ func TestScanner_Scan(t *testing.T) {
 		// Keywords
 		{s: `FROM`, tok: FROM, lit: "FROM"},
 		{s: `SELECT`, tok: SELECT, lit: "SELECT"},
+		{s: `ALERT`, tok: ALERT, lit: "ALERT"},
+		{s: `TABLE`, tok: TABLE, lit: "TABLE"},
+		{s: `DROP`, tok: DROP, lit: "DROP"},
 	}
 
 	for i, tt := range tests {

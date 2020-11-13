@@ -93,6 +93,12 @@ func (s *Scanner) scanIdent() (Token, string) {
 		return SELECT, buf.String()
 	case "FROM":
 		return FROM, buf.String()
+	case "ALERT":
+		return ALERT, buf.String()
+	case "TABLE":
+		return TABLE, buf.String()
+	case "DROP":
+		return DROP, buf.String()
 	}
 	return IDENT, buf.String()
 }

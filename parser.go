@@ -28,6 +28,9 @@ const (
 	// Keywords
 	SELECT
 	FROM
+	ALERT
+	TABLE
+	DROP
 )
 
 func isWhitespace(ch rune) bool {
