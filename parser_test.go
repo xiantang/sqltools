@@ -63,6 +63,15 @@ func TestParser_ParseSelectStatement(t *testing.T) {
 			},
 		},
 
+		{
+			s: "SELECT `name` FROM `tbl`",
+			stmt: &SelectStatement{
+				Fields:    []string{"name"},
+				TableName: "tbl",
+			},
+		},
+
+
 		// Multi-field statement
 		{
 			s: `SELECT first_name, last_name, age FROM my_table`,

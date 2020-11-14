@@ -31,6 +31,7 @@ func TestScanner_Scan(t *testing.T) {
 		{s: `foo`, tok: IDENT, lit: `foo`},
 		{s: `Zx12_3U_-`, tok: IDENT, lit: `Zx12_3U_`},
 		{s: `255`, tok: NUMBER, lit: `255`},
+		{s: "`foo`", tok: IDENT, lit: `foo`},
 
 		// Keywords
 		{s: `FROM`, tok: FROM, lit: "FROM"},

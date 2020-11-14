@@ -41,7 +41,7 @@ func (s *Scanner) Scan() (tok Token,lit string) {
 	if isWhitespace(ch) {
 		s.unread()
 		return s.scanWhitespace()
-	} else if isLetter(ch) {
+	} else if isLetter(ch) || ch == '`' {
 		s.unread()
 		return s.scanIdent()
 	}else if isDigit(ch) {
@@ -100,11 +100,15 @@ func (s *Scanner) scanDigit() (Token, string) {
 
 func (s *Scanner) scanIdent() (Token, string) {
 	var buf bytes.Buffer
-	buf.WriteRune(s.read())
+	if ch := s.read(); isLetter(ch) {
+		buf.WriteRune(ch)
+	}
 	for {
 		if ch := s.read(); ch == eof {
 			break
-		}else if !isLetter(ch)&& !isDigit(ch) && ch != '_' {
+		}else if ch == '`' {
+			break
+		} else if !isLetter(ch)&& !isDigit(ch) && ch != '_' {
 			s.unread()
 			break
 		}else {
