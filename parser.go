@@ -3,7 +3,24 @@ package sqltools
 import (
 	"fmt"
 	"io"
+	"strconv"
 )
+
+type Statement interface {
+}
+
+type ColumnStatement struct {
+	ColumnName string
+	DataType   Token
+	Length     int
+	Nullable   bool
+}
+
+type AlterStatement struct {
+	TableName string
+	Column    ColumnStatement
+	Option    Token
+}
 
 type SelectStatement struct {
 	Fields    []string
@@ -19,18 +36,26 @@ const (
 	WS
 
 	// Literals
-	IDENT // fields, table_name
+	IDENT  // fields, table_name,column_name
+	NUMBER // 1234
 
 	// Misc characters
-	ASTERISK // *
-	COMMA    // ,
+	ASTERISK         // *
+	COMMA            // ,
+	LeftParentheses  // (
+	RightParentheses // )
 
 	// Keywords
 	SELECT
 	FROM
-	ALERT
+	ALTER
 	TABLE
+	ADD
 	DROP
+	NULL
+	COLUMN
+	// DataType
+	VARCHAR
 )
 
 func isWhitespace(ch rune) bool {
@@ -72,11 +97,8 @@ func (p *Parser) scanWithoutWhiteSpace() (Token, string) {
 	return token, lit
 }
 
-func (p *Parser) Parse() (*SelectStatement, error) {
+func (p *Parser) parseSelectStatement() (Statement, error) {
 	stmt := &SelectStatement{}
-	if tok, lit := p.scanWithoutWhiteSpace(); tok != SELECT {
-		return nil, fmt.Errorf("found %q, expected SELECT", lit)
-	}
 	for {
 		tok, lit := p.scanWithoutWhiteSpace()
 		if tok != IDENT && tok != ASTERISK {
@@ -95,13 +117,104 @@ func (p *Parser) Parse() (*SelectStatement, error) {
 		return nil, fmt.Errorf("found %q, expected FROM", lit)
 	}
 	tok, lit = p.scanWithoutWhiteSpace()
-
 	if tok != IDENT {
 		return nil, fmt.Errorf("found %q, expected table name", lit)
 	}
 	stmt.TableName = lit
 
 	return stmt, nil
+}
+
+func (p *Parser) parseDropStatement(stmt *AlterStatement) (Statement, error) {
+	stmt.Option = DROP
+	tok, lit := p.scanWithoutWhiteSpace()
+	if tok != COLUMN {
+		return nil, fmt.Errorf("found %q, expected COLUMN", lit)
+	}
+	tok, lit = p.scanWithoutWhiteSpace()
+	if tok != IDENT {
+		return nil, fmt.Errorf("found %q, expected IDENT", lit)
+	}
+	stmt.Column = ColumnStatement{
+		ColumnName: lit,
+	}
+	return stmt, nil
+}
+
+func (p *Parser) parseAddStatement(stmt *AlterStatement) (Statement, error) {
+	stmt.Option = ADD
+	tok, lit := p.scanWithoutWhiteSpace()
+	if tok != IDENT {
+		return nil, fmt.Errorf("found %q, expected column name", lit)
+	}
+	cstmt := ColumnStatement{}
+	cstmt.ColumnName = lit
+	tok, lit = p.scanWithoutWhiteSpace()
+	switch tok {
+	case VARCHAR:
+		cstmt.DataType = VARCHAR
+		tok, lit = p.scanWithoutWhiteSpace()
+		if tok != LeftParentheses {
+			return nil, fmt.Errorf("found %q, expected LeftParentheses", lit)
+		}
+		ntok, nlit := p.scanWithoutWhiteSpace()
+		if ntok != NUMBER {
+			return nil, fmt.Errorf("found %q, expected NUMBER", nlit)
+		}
+		tok, lit = p.scanWithoutWhiteSpace()
+		if tok != RightParentheses {
+			return nil, fmt.Errorf("found %q, expected RightParentheses", lit)
+		}
+		number, err := strconv.Atoi(nlit)
+		if err != nil {
+			return nil, err
+		}
+		cstmt.Length = number
+		tok, lit = p.scanWithoutWhiteSpace()
+		if tok != NULL {
+			return nil, fmt.Errorf("found %q, expected RightParentheses", lit)
+		}
+		cstmt.Nullable = true
+	}
+	stmt.Column = cstmt
+
+	return stmt, nil
+
+}
+
+func (p *Parser) parseAlterStatement() (Statement, error) {
+	stmt := &AlterStatement{}
+	tok, lit := p.scanWithoutWhiteSpace()
+	if tok != TABLE {
+		return nil, fmt.Errorf("found %q, expected TABLE", lit)
+	}
+	tok, lit = p.scanWithoutWhiteSpace()
+	if tok != IDENT {
+		return nil, fmt.Errorf("found %q, expected table name", lit)
+	}
+	stmt.TableName = lit
+	tok, lit = p.scanWithoutWhiteSpace()
+	switch tok {
+	case DROP:
+		return p.parseDropStatement(stmt)
+	case ADD:
+		return p.parseAddStatement(stmt)
+	default:
+		return nil, fmt.Errorf("found %q, expected DROP", lit)
+	}
+
+}
+
+func (p *Parser) Parse() (Statement, error) {
+	tok, lit := p.scanWithoutWhiteSpace()
+	switch tok {
+	case SELECT:
+		return p.parseSelectStatement()
+	case ALTER:
+		return p.parseAlterStatement()
+	default:
+		return nil, fmt.Errorf("found %q, expected SELECT or ALTER", lit)
+	}
 
 }
 

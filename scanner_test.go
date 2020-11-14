@@ -23,17 +23,23 @@ func TestScanner_Scan(t *testing.T) {
 		// Misc characters
 		{s: `*`, tok: ASTERISK, lit: "*"},
 		{s: `,`, tok: COMMA, lit: ","},
+		{s:`(`,tok: LeftParentheses, lit:"("},
+		{s:`)`,tok:RightParentheses, lit:")"},
+
 
 		// Identifiers
 		{s: `foo`, tok: IDENT, lit: `foo`},
 		{s: `Zx12_3U_-`, tok: IDENT, lit: `Zx12_3U_`},
+		{s: `255`, tok: NUMBER, lit: `255`},
 
 		// Keywords
 		{s: `FROM`, tok: FROM, lit: "FROM"},
 		{s: `SELECT`, tok: SELECT, lit: "SELECT"},
-		{s: `ALERT`, tok: ALERT, lit: "ALERT"},
+		{s: `ALTER`, tok: ALTER, lit: "ALTER"},
 		{s: `TABLE`, tok: TABLE, lit: "TABLE"},
 		{s: `DROP`, tok: DROP, lit: "DROP"},
+		{s: `NULL`, tok: NULL, lit: "NULL"},
+
 	}
 
 	for i, tt := range tests {

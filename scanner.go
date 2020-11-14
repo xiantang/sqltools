@@ -44,6 +44,9 @@ func (s *Scanner) Scan() (tok Token,lit string) {
 	} else if isLetter(ch) {
 		s.unread()
 		return s.scanIdent()
+	}else if isDigit(ch) {
+		s.unread()
+		return s.scanDigit()
 	}
 
 	switch ch {
@@ -53,6 +56,10 @@ func (s *Scanner) Scan() (tok Token,lit string) {
 		return ASTERISK, string(ch)
 	case ',':
 		return COMMA, string(ch)
+	case '(':
+		return LeftParentheses,string(ch)
+	case ')':
+		return RightParentheses,string(ch)
 	}
 	return ILLEGAL, string(ch)
 }
@@ -74,6 +81,23 @@ func (s *Scanner)scanWhitespace() (Token, string) {
 	return WS, buf.String()
 }
 
+func (s *Scanner) scanDigit() (Token, string) {
+	var buf bytes.Buffer
+	buf.WriteRune(s.read())
+	for {
+		if ch := s.read(); ch == eof {
+			break
+		}else if !isDigit(ch) {
+			s.unread()
+			break
+		}else {
+			buf.WriteRune(ch)
+		}
+	}
+	return NUMBER, buf.String()
+
+}
+
 func (s *Scanner) scanIdent() (Token, string) {
 	var buf bytes.Buffer
 	buf.WriteRune(s.read())
@@ -93,12 +117,20 @@ func (s *Scanner) scanIdent() (Token, string) {
 		return SELECT, buf.String()
 	case "FROM":
 		return FROM, buf.String()
-	case "ALERT":
-		return ALERT, buf.String()
+	case "ALTER":
+		return ALTER, buf.String()
 	case "TABLE":
 		return TABLE, buf.String()
+	case "COLUMN":
+		return COLUMN, buf.String()
 	case "DROP":
 		return DROP, buf.String()
+	case "ADD":
+		return ADD, buf.String()
+	case "VARCHAR":
+		return VARCHAR, buf.String()
+	case "NULL":
+		return NULL, buf.String()
 	}
 	return IDENT, buf.String()
 }
