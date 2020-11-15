@@ -15,6 +15,8 @@ type ColumnStatement struct {
 	Length     int
 	Nullable   bool
 	Comment    string
+	DEFAULT    string
+	After      string
 }
 
 type AlterStatement struct {
@@ -59,6 +61,7 @@ const (
 	// DataType
 	VARCHAR
 	COMMENT
+	DATETIME
 )
 
 func isWhitespace(ch rune) bool {
@@ -145,11 +148,20 @@ func (p *Parser) parseDropStatement() (Statement, error) {
 
 func (p *Parser) parseAddStatement() (Statement, error) {
 	tok, lit := p.scanWithoutWhiteSpace()
-	if tok != IDENT {
+	cstmt := ColumnStatement{}
+	switch tok{
+	case IDENT:
+		cstmt.ColumnName = lit
+	case COLUMN:
+		tok, lit := p.scanWithoutWhiteSpace()
+		if tok != IDENT {
+			return nil, fmt.Errorf("found %q, expected column name", lit)
+		}
+		cstmt.ColumnName = lit
+	default:
 		return nil, fmt.Errorf("found %q, expected column name", lit)
 	}
-	cstmt := ColumnStatement{}
-	cstmt.ColumnName = lit
+
 	tok, lit = p.scanWithoutWhiteSpace()
 	switch tok {
 	case VARCHAR:

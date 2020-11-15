@@ -164,6 +164,30 @@ func TestParser_ParseAlterStatement(t *testing.T) {
 				TableName: "xxxxx",
 			},
 		},
+		{
+			s: "ALTER TABLE `xxxx` DROP COLUMN `xxxx`;\n",
+			stmt: &AlterStatement{
+				Option: DROP,
+				Column: ColumnStatement{
+					ColumnName: "xxxx",
+				},
+				TableName: "xxxx",
+			},
+		},
+		{
+			s: "ALTER TABLE `xxxx` ADD COLUMN `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP AFTER `xxxxx`;",
+			stmt: &AlterStatement{
+				Option: DROP,
+				Column: ColumnStatement{
+					ColumnName: "created_at",
+					DataType:   DATETIME,
+					Nullable:   false,
+					DEFAULT:    "CURRENT_TIMESTAMP",
+					After:      "xxxxx",
+				},
+				TableName: "xxxx",
+			},
+		},
 	}
 	for i, tt := range tests {
 
