@@ -1,3 +1,3 @@
-module github.com/xiantang/sqktools
+module github.com/xiantang/sqltools
 
 go 1.15
