@@ -14,11 +14,12 @@ type ColumnStatement struct {
 	DataType   Token
 	Length     int
 	Nullable   bool
+	Comment    string
 }
 
 type AlterStatement struct {
 	TableName string
-	Column    ColumnStatement
+	Column    Statement
 	Option    Token
 }
 
@@ -44,6 +45,7 @@ const (
 	COMMA            // ,
 	LeftParentheses  // (
 	RightParentheses // )
+	COLON            // ;
 
 	// Keywords
 	SELECT
@@ -56,6 +58,7 @@ const (
 	COLUMN
 	// DataType
 	VARCHAR
+	COMMENT
 )
 
 func isWhitespace(ch rune) bool {
@@ -125,8 +128,7 @@ func (p *Parser) parseSelectStatement() (Statement, error) {
 	return stmt, nil
 }
 
-func (p *Parser) parseDropStatement(stmt *AlterStatement) (Statement, error) {
-	stmt.Option = DROP
+func (p *Parser) parseDropStatement() (Statement, error) {
 	tok, lit := p.scanWithoutWhiteSpace()
 	if tok != COLUMN {
 		return nil, fmt.Errorf("found %q, expected COLUMN", lit)
@@ -135,14 +137,13 @@ func (p *Parser) parseDropStatement(stmt *AlterStatement) (Statement, error) {
 	if tok != IDENT {
 		return nil, fmt.Errorf("found %q, expected IDENT", lit)
 	}
-	stmt.Column = ColumnStatement{
+
+	return ColumnStatement{
 		ColumnName: lit,
-	}
-	return stmt, nil
+	}, nil
 }
 
-func (p *Parser) parseAddStatement(stmt *AlterStatement) (Statement, error) {
-	stmt.Option = ADD
+func (p *Parser) parseAddStatement() (Statement, error) {
 	tok, lit := p.scanWithoutWhiteSpace()
 	if tok != IDENT {
 		return nil, fmt.Errorf("found %q, expected column name", lit)
@@ -175,10 +176,17 @@ func (p *Parser) parseAddStatement(stmt *AlterStatement) (Statement, error) {
 			return nil, fmt.Errorf("found %q, expected RightParentheses", lit)
 		}
 		cstmt.Nullable = true
+		tok, lit = p.scanWithoutWhiteSpace()
+		if tok == COMMENT {
+			tok, lit = p.scanWithoutWhiteSpace()
+			if tok != IDENT {
+				return nil, fmt.Errorf("found %q, expected IDENT", lit)
+			}
+			cstmt.Comment = lit
+		}
 	}
-	stmt.Column = cstmt
 
-	return stmt, nil
+	return cstmt, nil
 
 }
 
@@ -196,9 +204,21 @@ func (p *Parser) parseAlterStatement() (Statement, error) {
 	tok, lit = p.scanWithoutWhiteSpace()
 	switch tok {
 	case DROP:
-		return p.parseDropStatement(stmt)
+		stmt.Option = DROP
+		cstmt, err := p.parseDropStatement()
+		if err != nil {
+			return nil, err
+		}
+		stmt.Column = cstmt
+		return stmt, nil
 	case ADD:
-		return p.parseAddStatement(stmt)
+		stmt.Option = ADD
+		cstmt, err := p.parseAddStatement()
+		if err != nil {
+			return nil, err
+		}
+		stmt.Column = cstmt
+		return stmt, nil
 	default:
 		return nil, fmt.Errorf("found %q, expected DROP", lit)
 	}

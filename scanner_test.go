@@ -5,7 +5,6 @@ import (
 	"testing"
 )
 
-
 // Ensure the scanner can scan tokens correctly.
 func TestScanner_Scan(t *testing.T) {
 	var tests = []struct {
@@ -23,8 +22,9 @@ func TestScanner_Scan(t *testing.T) {
 		// Misc characters
 		{s: `*`, tok: ASTERISK, lit: "*"},
 		{s: `,`, tok: COMMA, lit: ","},
-		{s:`(`,tok: LeftParentheses, lit:"("},
-		{s:`)`,tok:RightParentheses, lit:")"},
+		{s: `(`, tok: LeftParentheses, lit: "("},
+		{s: `)`, tok: RightParentheses, lit: ")"},
+		{s: `;`, tok: COLON, lit: ";"},
 
 
 		// Identifiers
@@ -40,7 +40,7 @@ func TestScanner_Scan(t *testing.T) {
 		{s: `TABLE`, tok: TABLE, lit: "TABLE"},
 		{s: `DROP`, tok: DROP, lit: "DROP"},
 		{s: `NULL`, tok: NULL, lit: "NULL"},
-
+		{s: `COMMENT`, tok: COMMENT, lit: "COMMENT"},
 	}
 
 	for i, tt := range tests {

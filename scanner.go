@@ -8,7 +8,6 @@ import (
 	"unicode"
 )
 
-
 var eof = rune(0)
 
 // Scanner represents a lexical scanner.
@@ -34,17 +33,15 @@ func (s *Scanner) read() rune {
 // unread places the previously read rune back on the reader.
 func (s *Scanner) unread() { _ = s.r.UnreadRune() }
 
-
-
-func (s *Scanner) Scan() (tok Token,lit string) {
+func (s *Scanner) Scan() (tok Token, lit string) {
 	ch := s.read()
 	if isWhitespace(ch) {
 		s.unread()
 		return s.scanWhitespace()
-	} else if isLetter(ch) || ch == '`' {
+	} else if isLetter(ch) || ch == '`' || ch == '\'' {
 		s.unread()
 		return s.scanIdent()
-	}else if isDigit(ch) {
+	} else if isDigit(ch) {
 		s.unread()
 		return s.scanDigit()
 	}
@@ -57,23 +54,25 @@ func (s *Scanner) Scan() (tok Token,lit string) {
 	case ',':
 		return COMMA, string(ch)
 	case '(':
-		return LeftParentheses,string(ch)
+		return LeftParentheses, string(ch)
 	case ')':
-		return RightParentheses,string(ch)
+		return RightParentheses, string(ch)
+	case ';':
+		return COLON, string(ch)
 	}
 	return ILLEGAL, string(ch)
 }
 
-func (s *Scanner)scanWhitespace() (Token, string) {
+func (s *Scanner) scanWhitespace() (Token, string) {
 	var buf bytes.Buffer
 	buf.WriteRune(s.read())
 	for {
 		if ch := s.read(); ch == eof {
 			break
-		}else if !isWhitespace(ch) {
+		} else if !isWhitespace(ch) {
 			s.unread()
 			break
-		}else {
+		} else {
 			buf.WriteRune(ch)
 		}
 	}
@@ -87,10 +86,10 @@ func (s *Scanner) scanDigit() (Token, string) {
 	for {
 		if ch := s.read(); ch == eof {
 			break
-		}else if !isDigit(ch) {
+		} else if !isDigit(ch) {
 			s.unread()
 			break
-		}else {
+		} else {
 			buf.WriteRune(ch)
 		}
 	}
@@ -106,12 +105,12 @@ func (s *Scanner) scanIdent() (Token, string) {
 	for {
 		if ch := s.read(); ch == eof {
 			break
-		}else if ch == '`' {
+		} else if ch == '`' || ch == '\'' {
 			break
-		} else if !isLetter(ch)&& !isDigit(ch) && ch != '_' {
+		} else if !isLetter(ch) && !isDigit(ch) && ch != '_' {
 			s.unread()
 			break
-		}else {
+		} else {
 			buf.WriteRune(ch)
 		}
 	}
@@ -135,6 +134,8 @@ func (s *Scanner) scanIdent() (Token, string) {
 		return VARCHAR, buf.String()
 	case "NULL":
 		return NULL, buf.String()
+	case "COMMENT":
+		return COMMENT, buf.String()
 	}
 	return IDENT, buf.String()
 }

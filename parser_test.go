@@ -149,6 +149,21 @@ func TestParser_ParseAlterStatement(t *testing.T) {
 				TableName: "xxxxx",
 			},
 		},
+		{
+			s: `alter table xxxxx
+	add xxxx2 varchar(255) null comment 'abcd'`,
+			stmt: &AlterStatement{
+				Option: ADD,
+				Column: ColumnStatement{
+					ColumnName: "xxxx2",
+					DataType:   VARCHAR,
+					Length:     255,
+					Nullable:   true,
+					Comment:    "abcd",
+				},
+				TableName: "xxxxx",
+			},
+		},
 	}
 	for i, tt := range tests {
 
