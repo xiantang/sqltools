@@ -5,21 +5,6 @@ import (
 	"testing"
 )
 
-func TestNewScanner(t *testing.T) {
-	s := NewScanner(strings.NewReader("tt.s"))
-	read := s.read()
-	println(string(read))
-	read = s.read()
-	println(string(read))
-	read = s.read()
-	println(string(read))
-	s.unread()
-	s.unread()
-	s.unread()
-	read = s.read()
-	println(string(read))
-}
-
 // Ensure the scanner can scan tokens correctly.
 func TestScanner_Scan(t *testing.T) {
 	var tests = []struct {
@@ -37,14 +22,25 @@ func TestScanner_Scan(t *testing.T) {
 		// Misc characters
 		{s: `*`, tok: ASTERISK, lit: "*"},
 		{s: `,`, tok: COMMA, lit: ","},
+		{s: `(`, tok: LeftParentheses, lit: "("},
+		{s: `)`, tok: RightParentheses, lit: ")"},
+		{s: `;`, tok: COLON, lit: ";"},
+
 
 		// Identifiers
 		{s: `foo`, tok: IDENT, lit: `foo`},
 		{s: `Zx12_3U_-`, tok: IDENT, lit: `Zx12_3U_`},
+		{s: `255`, tok: NUMBER, lit: `255`},
+		{s: "`foo`", tok: IDENT, lit: `foo`},
 
 		// Keywords
 		{s: `FROM`, tok: FROM, lit: "FROM"},
 		{s: `SELECT`, tok: SELECT, lit: "SELECT"},
+		{s: `ALTER`, tok: ALTER, lit: "ALTER"},
+		{s: `TABLE`, tok: TABLE, lit: "TABLE"},
+		{s: `DROP`, tok: DROP, lit: "DROP"},
+		{s: `NULL`, tok: NULL, lit: "NULL"},
+		{s: `COMMENT`, tok: COMMENT, lit: "COMMENT"},
 	}
 
 	for i, tt := range tests {
